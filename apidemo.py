@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from pydantic import BaseModel
 import os
-
+# hello  world
 load_dotenv()
 app = FastAPI()
 
@@ -18,6 +18,9 @@ class NewStudent(BaseModel):
     name : str
     roll_no : int
     course : str
+class newdepartment(BaseModel):
+    courseName:str
+    courseCode:str
 
 @app.get("/")
 def root():
@@ -39,4 +42,10 @@ def add_student(student: NewStudent):
     student_collection.insert_one(student_dict)
     return {"message" : "Student Added",
             "Added_Student" : student.name}
-    
+
+@app.post("/departments")
+def add_departments(department:newdepartment):
+    department_dict=department.model_dump()
+    department_collection.insert_one(department_dict)
+    return {"message" : "department Added",
+            "Added_department" : department.name}
