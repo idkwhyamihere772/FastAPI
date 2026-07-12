@@ -49,3 +49,15 @@ def add_departments(department:newdepartment):
     department_collection.insert_one(department_dict)
     return {"message" : "department Added",
             "Added_department" : department.courseName}
+
+@app.put("/student/{course}/{roll_no}")
+def update_student(course : str , roll_no : int ,student_update: NewStudent):
+    update_data = student_update.model_dump()
+    result = student_collection.update_one({"course" : course , "roll_no" : roll_no} , {"$set" : update_data})
+    if result.matched_count == 0:
+        return{"error" : f"No student exist with roll no {roll_no} in course {course}"}
+    
+    return{
+        "message" : "Student updated",
+        "Updated" : update_data
+    }
