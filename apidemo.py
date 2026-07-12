@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pydantic import BaseModel
 import os
+
 # hello  world
 load_dotenv()
 app = FastAPI()
@@ -55,7 +56,8 @@ def update_student(course : str , roll_no : int ,student_update: NewStudent):
     update_data = student_update.model_dump()
     result = student_collection.update_one({"course" : course , "roll_no" : roll_no} , {"$set" : update_data})
     if result.matched_count == 0:
-        return{"error" : f"No student exist with roll no {roll_no} in course {course}"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=F"No student exist with roll no {roll_no} in course {course}")
     
     return{
         "message" : "Student updated",
