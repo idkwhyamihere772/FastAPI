@@ -49,3 +49,4 @@ def add_departments(department:newdepartment):
     department_collection.insert_one(department_dict)
     return {"message" : "department Added",
             "Added_department" : department.name}
+#hello guys welcome to my code
