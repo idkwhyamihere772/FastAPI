@@ -1,9 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pydantic import BaseModel
 import os
 
+# hello  world
 load_dotenv()
 app = FastAPI()
 
@@ -18,6 +19,9 @@ class NewStudent(BaseModel):
     name : str
     roll_no : int
     course : str
+class newdepartment(BaseModel):
+    courseName:str
+    courseCode:str
 
 @app.get("/")
 def root():
@@ -39,4 +43,49 @@ def add_student(student: NewStudent):
     student_collection.insert_one(student_dict)
     return {"message" : "Student Added",
             "Added_Student" : student.name}
+
+@app.post("/departments")
+def add_departments(department:newdepartment):
+    department_dict=department.model_dump()
+    department_collection.insert_one(department_dict)
+    return {"message" : "department Added",
+            "Added_department" : department.courseName}
+
+@app.put("/student/{course}/{roll_no}")
+def update_student(course : str , roll_no : int ,student_update: NewStudent):
+    update_data = student_update.model_dump()
+    result = student_collection.update_one({"course" : course , "roll_no" : roll_no} , {"$set" : update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"No student exist with roll no {roll_no} in course {course}")
     
+    return{
+        "message" : "Student updated",
+        "Updated" : update_data
+    }
+@app.put("/department/{courseName}/{courseCode}")
+def update_department(courseName:str,courseCode:str,department_update:newdepartment):
+    update_Data=department_update.model_dump()
+    result=department_collection.update_one({"courseName":courseName,"courseCode":courseCode},{"$set":update_Data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"No department exist with courseName {courseName} courseCode {courseCode}")
+        
+    
+    return{
+        "message" : "department updated",
+        "Updated" : update_Data
+    }
+
+@app.delete("/department/{courseName}/{courseCode}")
+def delete_department(courseName : str , courseCode : str):
+    result = department_collection.delete_one({"courseName" : courseName , "courseCode" : courseCode})
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status = status.HTTP_404_NOT_FOUND,
+            details = f" {courseName} Department Doesnt exist" 
+        )
+    return{
+        "message" : "Department deleted",
+
+    }
