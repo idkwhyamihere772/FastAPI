@@ -25,7 +25,7 @@
             <input type="text" id="name" placeholder="Student Name" required><br>
             <input type="number" id="roll_no" placeholder="Roll Number" required><br>
             <input type="text" id="course" placeholder="Course (e.g. Economics)" required><br>
-            <button type="submit" style="background: #051342; color: rgb(17, 16, 90); border: none; cursor: pointer;">Add Student</button>
+            <button type="submit" style="background: #e7e7e7; color: rgb(100, 98, 172); border: none; cursor: pointer;">Add Student</button>
         </form>
         <p id="formMessage"></p>
     </div>
@@ -63,17 +63,19 @@
 
                 // Your backend returns {"total students": X, "Students": [...]}
                 data.Students.forEach(student => {
-                    const row = `
-                        <tr>
-                            <td>${student.name}</td>
-                            <td>${student.roll_no}</td>
-                            <td>${student.course}</td>
-                            <td>
-                                <button class="btn-delete" onclick="deleteStudent('${student.course}', ${student.roll_no})">Delete</button>
-                            </td>
-                        </tr>
-                    `;
-                    tableBody.innerHTML += row;
+                    if(student.roll_no && student.name){
+                        const row = `
+            <tr>
+                <td>${student.name}</td>
+                <td>${student.roll_no}</td>
+                <td>${student.course}</td>
+                <td>
+                    <button class="btn-delete" onclick="deleteStudent('${student.course}', ${student.roll_no})">Delete</button>
+                </td>
+            </tr>
+        `;
+            tableBody.innerHTML += row;
+                    }
                 });
             } catch (error) {
                 console.error("Error fetching students:", error);
