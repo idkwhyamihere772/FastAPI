@@ -103,11 +103,16 @@ def delete_department(courseName : str , courseCode : str):
 
 @app.delete("/student/{course}/{roll_no}")
 def delete_student(course:str,roll_no:int):
-    result=student_collection.deleteone({"course":course,"roll_no":roll_no})
-    if result.delete_count==0:
+    result=student_collection.delete_one({"course":course,"roll_no":roll_no})
+    if result.deleted_count==0:
          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail=f" cannot delete student with roll no {roll_no} and course {course} doesn't exist")
     return{"status":"deleted",
            "message":"student deleted"}
 
 
+
+
+                            
+                             
+    
