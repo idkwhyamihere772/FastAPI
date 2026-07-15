@@ -3,10 +3,21 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from pydantic import BaseModel
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
-# hello  world
+
 load_dotenv()
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"]
+)
+# hello  world
+
 
 mongo_uri = os.getenv("mongo_uri")
 cli = MongoClient(mongo_uri)
