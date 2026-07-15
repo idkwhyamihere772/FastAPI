@@ -3,10 +3,22 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from pydantic import BaseModel
 import os
+from fastapi.middleware.cors import CORSMiddleware
+
 
 # hello  world
 load_dotenv()
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"]
+)
+# hello  world
+
 
 mongo_uri = os.getenv("mongo_uri")
 cli = MongoClient(mongo_uri)
@@ -76,6 +88,18 @@ def update_department(courseName:str,courseCode:str,department_update:newdepartm
         "message" : "department updated",
         "Updated" : update_Data
     }
+
+@app.delete("/department/{courseName}/{courseCode}")
+def delete_department(courseName : str , courseCode : str):
+    result = department_collection.delete_one({"courseName" : courseName , "courseCode" : courseCode})
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status = status.HTTP_404_NOT_FOUND,
+            details = f" {courseName} Department Doesnt exist" 
+        )
+    return{
+        "message" : "Department deleted",
+
 @app.delete("/student/{course}/{roll_no}")
 def delete_student(course:str,roll_no:int):
     result=student_collection.deleteone({"course":course,"roll_no":roll_no})
