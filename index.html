@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College API Frontend</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
+        .card { background: #f4f4f9; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        input, button { padding: 8px; margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        .btn-delete { background: #ff4d4d; color: rgb(190, 25, 127); border: none; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <h1>College Management System</h1>
+
+    <!-- ADD STUDENT FORM -->
+    <div class="card">
+        <h3>Add New Student</h3>
+        <form id="addStudentForm">
+            <input type="text" id="name" placeholder="Student Name" required><br>
+            <input type="number" id="roll_no" placeholder="Roll Number" required><br>
+            <input type="text" id="course" placeholder="Course (e.g. Economics)" required><br>
+            <button type="submit" style="background: #051342; color: rgb(17, 16, 90); border: none; cursor: pointer;">Add Student</button>
+        </form>
+        <p id="formMessage"></p>
+    </div>
+
+    <!-- STUDENT LIST -->
+    <div class="card">
+        <h3>Student List</h3>
+        <button onclick="fetchStudents()" style="cursor: pointer;">Refresh List</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Roll No</th>
+                    <th>Course</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                <!-- Data will be populated here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://127.0.0.1:8000";
+
+        // 1. FETCH AND DISPLAY STUDENTS
+        async function fetchStudents() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/students`);
+                const data = await response.json();
+                
+                const tableBody = document.getElementById("studentTableBody");
+                tableBody.innerHTML = ""; // Clear existing rows
+
+                // Your backend returns {"total students": X, "Students": [...]}
+                data.Students.forEach(student => {
+                    const row = `
+                        <tr>
+                            <td>${student.name}</td>
+                            <td>${student.roll_no}</td>
+                            <td>${student.course}</td>
+                            <td>
+                                <button class="btn-delete" onclick="deleteStudent('${student.course}', ${student.roll_no})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Error fetching students:", error);
+                alert("Failed to load students. Make sure your FastAPI server is running!");
+            }
+        }
+
+        // 2. ADD A NEW STUDENT
+        document.getElementById("addStudentForm").addEventListener("submit", async function(event) {
+            event.preventDefault(); // Prevent page reload
+
+            const newStudent = {
+                name: document.getElementById("name").value,
+                roll_no: parseInt(document.getElementById("roll_no").value),
+                course: document.getElementById("course").value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/student`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(newStudent)
+                });
+
+                if (response.ok) {
+                    document.getElementById("formMessage").style.color = "green";
+                    document.getElementById("formMessage").innerText = "Student added successfully!";
+                    document.getElementById("addStudentForm").reset();
+                    fetchStudents(); // Automatically refresh the table
+                } else {
+                    const errData = await response.json();
+                    document.getElementById("formMessage").style.color = "red";
+                    document.getElementById("formMessage").innerText = `Error: ${JSON.stringify(errData)}`;
+                }
+            } catch (error) {
+                console.error("Error adding student:", error);
+            }
+        });
+
+        // 3. DELETE A STUDENT
+        async function deleteStudent(course, rollNo) {
+            if (!confirm(`Are you sure you want to delete roll number ${rollNo} from ${course}?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/student/${course}/${rollNo}`, {
+                    method: "DELETE"
+                });
+
+                if (response.ok) {
+                    fetchStudents(); // Refresh the table after deletion
+                } else {
+                    const errData = await response.json();
+                    alert(`Failed to delete: ${errData.detail}`);
+                }
+            } catch (error) {
+                console.error("Error deleting student:", error);
+            }
+        }
+
+        // Load students automatically when the page opens
+        window.onload = fetchStudents;
+    </script>
+</body>
+</html>
