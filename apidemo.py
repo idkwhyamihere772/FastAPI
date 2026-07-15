@@ -79,7 +79,7 @@ def update_department(courseName:str,courseCode:str,department_update:newdepartm
 @app.delete("/student/{course}/{roll_no}")
 def delete_student(course:str,roll_no:int):
     result=student_collection.delete_one({"course":course,"roll_no":roll_no})
-    if result.delete_one==0:
+    if result.deleted_one==0:
          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail=f" cannot delete student with roll no {roll_no} and course {course} doesn't exist")
     return{"status":"deleted",
@@ -89,7 +89,7 @@ def delete_student(course:str,roll_no:int):
 @app.delete("/department/{courseName}/{courseCode}")
 def delete_department(courseName:str,courseCode:str):
     result=department_collection.delete_one({"courseName":courseName,"courseCode":courseCode})
-    if result.delete_one==0:
+    if result.deleted_one==0:
          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail=f" cannot delete department with courseName {courseName} courseCode {courseCode} doesn't exist")
     return{"status":"deleted",
@@ -97,4 +97,4 @@ def delete_department(courseName:str,courseCode:str):
 
                             
                              
-    #,,,,
+    
