@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from pydantic import BaseModel
 import os
 from fastapi.middleware.cors import CORSMiddleware
-
+from passlib.context import CryptContext
 
 # hello  world
 load_dotenv()
@@ -26,14 +26,25 @@ cli = MongoClient(mongo_uri)
 db = cli.college
 department_collection = db.Department
 student_collection = db.Student
+user_collection = db.User
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated = "auto")
 class NewStudent(BaseModel):
     name : str
     roll_no : int
     course : str
+
 class newdepartment(BaseModel):
     courseName:str
     courseCode:str
+
+class NewUser(BaseModel):
+    username: str
+    password : str
+    role : str
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
 
 @app.get("/")
 def root():
@@ -110,4 +121,16 @@ def delete_student(course:str,roll_no:int):
     return{"status":"deleted",
            "message":"student deleted"}
 
-
+@app.post("/register",status_code=status.HTTP_201_CREATED)
+def register_user(user: NewUser):
+    if user.role not in ["admin","student","faculty"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            details="Cant register")
+    user_dict = {"username" : user.username , 
+                 "password" : hash_password(user.password) ,
+                 "role" : user.role}
+    
+    user_collection.insert_one(user_dict)
+    return{
+        "message" : f"User {user.username} added"
+    }
