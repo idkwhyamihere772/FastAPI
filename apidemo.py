@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pydantic import BaseModel
 import os
 from fastapi.middleware.cors import CORSMiddleware
 from passlib.context import CryptContext
-
+from datetime import datetime, timedelta, timezone
+from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm
+import jwt
 # hello  world
 load_dotenv()
 app = FastAPI()
