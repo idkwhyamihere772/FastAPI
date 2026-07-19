@@ -3,140 +3,1412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>College API Frontend</title>
+    <title>College Management Portal</title>
+    <!-- Importing Outfit font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
-        .card { background: #f4f4f9; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
-        input, button { padding: 8px; margin: 5px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        .btn-delete { background: #ff4d4d; color: rgb(190, 25, 127); border: none; cursor: pointer; border-radius: 4px; }
+        :root {
+            --bg-primary: #080d1a;
+            --bg-secondary: #0e1626;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            
+            --success-color: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.3);
+            
+            --danger-color: #f43f5e;
+            --danger-hover: #e11d48;
+            --danger-glow: rgba(244, 63, 94, 0.3);
+            
+            --warning-color: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.3);
+            
+            --font-family: 'Outfit', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Glow Orbs in Background */
+        .glow-orb {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            top: -150px;
+            right: -100px;
+            background-color: var(--accent-color);
+        }
+
+        .orb-2 {
+            bottom: -150px;
+            left: -100px;
+            background-color: #3b82f6;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .app-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Authentication View (Home state) */
+        #auth-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 440px;
+            animation: fadeIn 0.6s ease-out;
+            margin: auto 0;
+        }
+
+        #auth-section.active {
+            display: flex;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .auth-header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .auth-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 300;
+        }
+
+        .auth-card {
+            width: 100%;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 36px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 28px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px;
+            font-family: var(--font-family);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .auth-form {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .auth-form.active {
+            display: flex;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input, .input-group select {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-family: var(--font-family);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #4f46e5 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            padding: 14px;
+            font-family: var(--font-family);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Dashboard View (Visible when logged in) */
+        #dashboard-section {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        #dashboard-section.active {
+            display: block;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 18px 28px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            margin-bottom: 32px;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            font-size: 2rem;
+        }
+
+        .brand-text {
+            font-size: 1.35rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        #user-display-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .role-badge {
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+        }
+
+        .role-admin {
+            background-color: rgba(244, 63, 94, 0.1);
+            color: var(--danger-color);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+            box-shadow: 0 0 12px var(--danger-glow);
+        }
+
+        .role-faculty {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            box-shadow: 0 0 12px var(--warning-glow);
+        }
+
+        .role-student {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 12px var(--success-glow);
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            background: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+            box-shadow: 0 0 15px var(--danger-glow);
+        }
+
+        /* Dashboard tabs selector */
+        .content-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 28px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .content-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            font-family: var(--font-family);
+            font-size: 1.05rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border-radius: 8px;
+        }
+
+        .content-tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .content-tab-btn.active {
+            color: white;
+            background: var(--accent-color);
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-header h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .action-btn-primary {
+            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 10px 20px;
+            font-family: var(--font-family);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px var(--success-glow);
+        }
+
+        .action-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px var(--success-glow);
+        }
+
+        .search-bar-container {
+            margin-bottom: 24px;
+        }
+
+        .search-bar-container input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 18px;
+            font-family: var(--font-family);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .search-bar-container input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 170px;
+            transition: var(--transition);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .info-card-details h3 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .info-card-details p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            padding-bottom: 6px;
+        }
+
+        .info-card-details p strong {
+            color: var(--text-primary);
+        }
+
+        .info-card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .card-action-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: var(--font-family);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .card-action-btn.btn-edit:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            border-color: #818cf8;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .card-action-btn.btn-delete:hover {
+            background: rgba(244, 63, 94, 0.1);
+            color: var(--danger-color);
+            border-color: var(--danger-color);
+            box-shadow: 0 0 10px var(--danger-glow);
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 460px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            transform: translateY(-30px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 14px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            color: white;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: var(--font-family);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: var(--font-family);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: #111827;
+            border-left: 4px solid var(--accent-color);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            font-family: var(--font-family);
+            font-size: 0.95rem;
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            min-width: 280px;
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .toast.success {
+            border-left-color: var(--success-color);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger-color);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        /* Bottom Footer */
+        .bottom-footer {
+            width: 100%;
+            text-align: center;
+            padding: 24px 20px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            z-index: 10;
+            border-top: 1px solid rgba(255,255,255,0.02);
+            margin-top: auto;
+        }
+
+        /* Keyframes */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Utilities */
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
 
-    <h1>College Management System</h1>
+    <!-- Ambient background glow elements -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
 
-    <!-- ADD STUDENT FORM -->
-    <div class="card">
-        <h3>Add New Student</h3>
-        <form id="addStudentForm">
-            <input type="text" id="name" placeholder="Student Name" required><br>
-            <input type="number" id="roll_no" placeholder="Roll Number" required><br>
-            <input type="text" id="course" placeholder="Course (e.g. Economics)" required><br>
-            <button type="submit" style="background: #e7e7e7; color: rgb(100, 98, 172); border: none; cursor: pointer;">Add Student</button>
-        </form>
-        <p id="formMessage"></p>
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- Main Container -->
+    <div class="app-container">
+
+        <!-- AUTH SECTION (Login / Register Card) -->
+        <div id="auth-section" class="active">
+            <div class="auth-header">
+                <h1>College Portal</h1>
+                <p>Welcome! Authenticate to access the management portal</p>
+            </div>
+            
+            <div class="auth-card">
+                <div class="auth-tabs">
+                    <button id="tab-login" class="tab-btn active" onclick="switchAuthTab('login')">Login</button>
+                    <button id="tab-register" class="tab-btn" onclick="switchAuthTab('register')">Register</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+                    <div class="input-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" placeholder="Enter username" required autocomplete="username">
+                    </div>
+                    <div class="input-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="submit-btn">Sign In</button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                    <div class="input-group">
+                        <label for="reg-username">Username</label>
+                        <input type="text" id="reg-username" placeholder="Choose a username" required autocomplete="username">
+                    </div>
+                    <div class="input-group">
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" placeholder="Choose a password" required autocomplete="new-password">
+                    </div>
+                    <div class="input-group">
+                        <label for="reg-role">Role</label>
+                        <select id="reg-role" required>
+                            <option value="student">Student</option>
+                            <option value="faculty">Faculty</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn">Register Account</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- DASHBOARD SECTION (Loads after Login) -->
+        <div id="dashboard-section">
+            <!-- Navigation Header -->
+            <header class="navbar">
+                <div class="nav-brand">
+                    <span class="brand-logo">🏫</span>
+                    <span class="brand-text">College Hub</span>
+                </div>
+                <div class="nav-user">
+                    <span id="user-display-name">Guest</span>
+                    <span id="user-role-badge" class="role-badge">Student</span>
+                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                </div>
+            </header>
+
+            <!-- Inner Tabs -->
+            <div class="content-tabs">
+                <button id="view-students-tab" class="content-tab-btn active" onclick="switchDashboardTab('students')">Students Directory</button>
+                <button id="view-departments-tab" class="content-tab-btn" onclick="switchDashboardTab('departments')">Departments List</button>
+            </div>
+
+            <!-- Tab Pane: Students -->
+            <div id="students-tab-content" class="tab-pane active">
+                <div class="section-header">
+                    <h2>Students Directory</h2>
+                    <button id="open-add-student-btn" class="action-btn-primary hidden" onclick="openAddStudentModal()">+ Add Student</button>
+                </div>
+
+                <div class="search-bar-container">
+                    <input type="text" id="student-search" placeholder="Search students by name or course..." oninput="filterStudents()">
+                </div>
+
+                <div class="cards-grid" id="students-grid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Tab Pane: Departments -->
+            <div id="departments-tab-content" class="tab-pane">
+                <div class="section-header">
+                    <h2>Departments List</h2>
+                    <button id="open-add-dept-btn" class="action-btn-primary hidden" onclick="openAddDeptModal()">+ Add Department</button>
+                </div>
+
+                <div class="cards-grid" id="departments-grid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- STUDENT LIST -->
-    <div class="card">
-        <h3>Student List</h3>
-        <button onclick="fetchStudents()" style="cursor: pointer;">Refresh List</button>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Roll No</th>
-                    <th>Course</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="studentTableBody">
-                <!-- Data will be populated here by JavaScript -->
-            </tbody>
-        </table>
+    <!-- Modal: Student Form (Add / Edit) -->
+    <div id="student-modal" class="modal-overlay" onclick="closeModalOnOverlay(event, 'student-modal')">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="student-modal-title">Add Student</h3>
+                <button class="close-btn" onclick="toggleModal('student-modal', false)">&times;</button>
+            </div>
+            <form id="student-form" onsubmit="submitStudentForm(event)">
+                <input type="hidden" id="student-edit-mode" value="false">
+                <input type="hidden" id="student-old-course">
+                <input type="hidden" id="student-old-roll">
+                
+                <div class="input-group" style="margin-bottom: 16px;">
+                    <label for="student-name">Full Name</label>
+                    <input type="text" id="student-name" placeholder="John Doe" required>
+                </div>
+                <div class="input-group" style="margin-bottom: 16px;">
+                    <label for="student-roll">Roll Number</label>
+                    <input type="number" id="student-roll" placeholder="e.g. 23" required>
+                </div>
+                <div class="input-group" style="margin-bottom: 16px;">
+                    <label for="student-course">Course</label>
+                    <input type="text" id="student-course" placeholder="e.g. Economics" required>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="toggleModal('student-modal', false)">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Student</button>
+                </div>
+            </form>
+        </div>
     </div>
 
+    <!-- Modal: Department Form (Add / Edit) -->
+    <div id="dept-modal" class="modal-overlay" onclick="closeModalOnOverlay(event, 'dept-modal')">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="dept-modal-title">Add Department</h3>
+                <button class="close-btn" onclick="toggleModal('dept-modal', false)">&times;</button>
+            </div>
+            <form id="dept-form" onsubmit="submitDeptForm(event)">
+                <input type="hidden" id="dept-edit-mode" value="false">
+                <input type="hidden" id="dept-old-name">
+                <input type="hidden" id="dept-old-code">
+                
+                <div class="input-group" style="margin-bottom: 16px;">
+                    <label for="dept-name">Department Name</label>
+                    <input type="text" id="dept-name" placeholder="Computer Science" required>
+                </div>
+                <div class="input-group" style="margin-bottom: 16px;">
+                    <label for="dept-code">Department Code</label>
+                    <input type="text" id="dept-code" placeholder="e.g. CS101" required>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="toggleModal('dept-modal', false)">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Department</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer - Placed at the absolute bottom -->
+    <footer class="bottom-footer">
+        made by gunjan and kunal
+    </footer>
+
+    <!-- App JavaScript Logic -->
     <script>
         const API_BASE_URL = "http://127.0.0.1:8000";
+        let allStudents = [];
 
-        // 1. FETCH AND DISPLAY STUDENTS
-        async function fetchStudents() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/students`);
-                const data = await response.json();
-                
-                const tableBody = document.getElementById("studentTableBody");
-                tableBody.innerHTML = ""; // Clear existing rows
+        // --- AUTH & LOGIN ---
 
-                // Your backend returns {"total students": X, "Students": [...]}
-                data.Students.forEach(student => {
-                    if(student.roll_no && student.name){
-                        const row = `
-            <tr>
-                <td>${student.name}</td>
-                <td>${student.roll_no}</td>
-                <td>${student.course}</td>
-                <td>
-                    <button class="btn-delete" onclick="deleteStudent('${student.course}', ${student.roll_no})">Delete</button>
-                </td>
-            </tr>
-        `;
-            tableBody.innerHTML += row;
-                    }
-                });
-            } catch (error) {
-                console.error("Error fetching students:", error);
-                alert("Failed to load students. Make sure your FastAPI server is running!");
+        function switchAuthTab(tab) {
+            const loginTab = document.getElementById("tab-login");
+            const registerTab = document.getElementById("tab-register");
+            const loginForm = document.getElementById("loginForm");
+            const registerForm = document.getElementById("registerForm");
+
+            if (tab === 'login') {
+                loginTab.classList.add("active");
+                registerTab.classList.remove("active");
+                loginForm.classList.add("active");
+                registerForm.classList.remove("active");
+            } else {
+                loginTab.classList.remove("active");
+                registerTab.classList.add("active");
+                loginForm.classList.remove("active");
+                registerForm.classList.add("active");
             }
         }
 
-        // 2. ADD A NEW STUDENT
-        document.getElementById("addStudentForm").addEventListener("submit", async function(event) {
-            event.preventDefault(); // Prevent page reload
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById("login-username").value;
+            const password = document.getElementById("login-password").value;
 
-            const newStudent = {
-                name: document.getElementById("name").value,
-                roll_no: parseInt(document.getElementById("roll_no").value),
-                course: document.getElementById("course").value
-            };
+            const formData = new URLSearchParams();
+            formData.append("username", username);
+            formData.append("password", password);
 
             try {
-                const response = await fetch(`${API_BASE_URL}/student`, {
+                const response = await fetch(`${API_BASE_URL}/login`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(newStudent)
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: formData.toString()
                 });
 
                 if (response.ok) {
-                    document.getElementById("formMessage").style.color = "green";
-                    document.getElementById("formMessage").innerText = "Student added successfully!";
-                    document.getElementById("addStudentForm").reset();
-                    fetchStudents(); // Automatically refresh the table
+                    const data = await response.json();
+                    localStorage.setItem("token", data.access_token);
+                    showToast("Logged in successfully!", "success");
+                    initApp();
                 } else {
                     const errData = await response.json();
-                    document.getElementById("formMessage").style.color = "red";
-                    document.getElementById("formMessage").innerText = `Error: ${JSON.stringify(errData)}`;
+                    showToast(errData.detail || "Authentication failed. Check your password.", "error");
                 }
             } catch (error) {
-                console.error("Error adding student:", error);
+                console.error("Login Error:", error);
+                showToast("Connection to backend server failed.", "error");
             }
-        });
+        }
 
-        // 3. DELETE A STUDENT
-        async function deleteStudent(course, rollNo) {
-            if (!confirm(`Are you sure you want to delete roll number ${rollNo} from ${course}?`)) return;
+        async function handleRegister(event) {
+            event.preventDefault();
+            const username = document.getElementById("reg-username").value;
+            const password = document.getElementById("reg-password").value;
+            const role = document.getElementById("reg-role").value;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/student/${course}/${rollNo}`, {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username, password, role })
+                });
+
+                if (response.status === 201) {
+                    showToast("Registration successful! You can now login.", "success");
+                    switchAuthTab('login');
+                    document.getElementById("login-username").value = username;
+                    document.getElementById("login-password").value = "";
+                } else {
+                    const errData = await response.json();
+                    showToast(errData.detail || "Registration failed.", "error");
+                }
+            } catch (error) {
+                console.error("Register Error:", error);
+                showToast("Connection to backend server failed.", "error");
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("token");
+            showToast("Logged out successfully.", "info");
+            initApp();
+        }
+
+        // Helper to parse JWT client-side
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // --- DASHBOARD NAVIGATION ---
+
+        function switchDashboardTab(tabName) {
+            const studentsTab = document.getElementById("view-students-tab");
+            const deptsTab = document.getElementById("view-departments-tab");
+            const studentsPane = document.getElementById("students-tab-content");
+            const deptsPane = document.getElementById("departments-tab-content");
+
+            if (tabName === 'students') {
+                studentsTab.classList.add("active");
+                deptsTab.classList.remove("active");
+                studentsPane.classList.add("active");
+                deptsPane.classList.remove("active");
+            } else {
+                studentsTab.classList.remove("active");
+                deptsTab.classList.add("active");
+                studentsPane.classList.remove("active");
+                deptsPane.classList.add("active");
+            }
+        }
+
+        // --- DATA FETCHING & RENDERING ---
+
+        async function fetchStudents() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/students`);
+                if (response.ok) {
+                    const data = await response.json();
+                    allStudents = data.Students || [];
+                    renderStudents(allStudents);
+                }
+            } catch (error) {
+                console.error("Fetch Students Error:", error);
+                showToast("Failed to sync students list.", "error");
+            }
+        }
+
+        function renderStudents(studentsList) {
+            const grid = document.getElementById("students-grid");
+            grid.innerHTML = "";
+
+            const token = localStorage.getItem("token");
+            const user = token ? parseJwt(token) : null;
+            const role = user ? user.role : "student";
+
+            studentsList.forEach(student => {
+                if (!student.name) return;
+
+                const card = document.createElement("div");
+                card.className = "info-card";
+
+                let actionButtons = "";
+                // Admin & Faculty can edit. Only Admin can delete.
+                if (role === "admin" || role === "faculty") {
+                    const deleteBtn = (role === "admin") 
+                        ? `<button class="card-action-btn btn-delete" onclick="deleteStudent('${student.course}', ${student.roll_no})">Delete</button>` 
+                        : "";
+                    actionButtons = `
+                        <div class="info-card-actions">
+                            <button class="card-action-btn btn-edit" onclick="openEditStudentModal('${student.name}', ${student.roll_no}, '${student.course}')">Edit</button>
+                            ${deleteBtn}
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="info-card-details">
+                        <h3>${student.name}</h3>
+                        <p>Roll Number: <strong>${student.roll_no}</strong></p>
+                        <p>Course/Field: <strong>${student.course}</strong></p>
+                    </div>
+                    ${actionButtons}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        async function fetchDepartments() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/departments`);
+                if (response.ok) {
+                    const data = await response.json();
+                    renderDepartments(data.departments || []);
+                }
+            } catch (error) {
+                console.error("Fetch Departments Error:", error);
+                showToast("Failed to sync departments list.", "error");
+            }
+        }
+
+        function renderDepartments(departmentsList) {
+            const grid = document.getElementById("departments-grid");
+            grid.innerHTML = "";
+
+            const token = localStorage.getItem("token");
+            const user = token ? parseJwt(token) : null;
+            const role = user ? user.role : "student";
+
+            departmentsList.forEach(dept => {
+                const card = document.createElement("div");
+                card.className = "info-card";
+
+                let actionButtons = "";
+                // Only Admin can edit/delete departments
+                if (role === "admin") {
+                    actionButtons = `
+                        <div class="info-card-actions">
+                            <button class="card-action-btn btn-edit" onclick="openEditDeptModal('${dept.courseName}', '${dept.courseCode}')">Edit</button>
+                            <button class="card-action-btn btn-delete" onclick="deleteDept('${dept.courseName}', '${dept.courseCode}')">Delete</button>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="info-card-details">
+                        <h3>${dept.courseName}</h3>
+                        <p>Department Code: <strong>${dept.courseCode}</strong></p>
+                    </div>
+                    ${actionButtons}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterStudents() {
+            const query = document.getElementById("student-search").value.toLowerCase();
+            const filtered = allStudents.filter(student => {
+                const name = (student.name || "").toLowerCase();
+                const course = (student.course || "").toLowerCase();
+                return name.includes(query) || course.includes(query);
+            });
+            renderStudents(filtered);
+        }
+
+        // --- CRUD OPERATIONS & MODALS ---
+
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (show) {
+                modal.classList.add("active");
+            } else {
+                modal.classList.remove("active");
+            }
+        }
+
+        function closeModalOnOverlay(event, modalId) {
+            if (event.target.id === modalId) {
+                toggleModal(modalId, false);
+            }
+        }
+
+        // Student Modals
+        function openAddStudentModal() {
+            document.getElementById("student-modal-title").innerText = "Add New Student";
+            document.getElementById("student-edit-mode").value = "false";
+            document.getElementById("student-form").reset();
+            toggleModal("student-modal", true);
+        }
+
+        function openEditStudentModal(name, roll, course) {
+            document.getElementById("student-modal-title").innerText = "Edit Student Profile";
+            document.getElementById("student-edit-mode").value = "true";
+            document.getElementById("student-old-course").value = course;
+            document.getElementById("student-old-roll").value = roll;
+
+            document.getElementById("student-name").value = name;
+            document.getElementById("student-roll").value = roll;
+            document.getElementById("student-course").value = course;
+
+            toggleModal("student-modal", true);
+        }
+
+        async function submitStudentForm(event) {
+            event.preventDefault();
+            const isEdit = document.getElementById("student-edit-mode").value === "true";
+            const oldCourse = document.getElementById("student-old-course").value;
+            const oldRoll = document.getElementById("student-old-roll").value;
+
+            const studentData = {
+                name: document.getElementById("student-name").value,
+                roll_no: parseInt(document.getElementById("student-roll").value),
+                course: document.getElementById("student-course").value
+            };
+
+            let url = `${API_BASE_URL}/student`;
+            let method = "POST";
+
+            if (isEdit) {
+                url = `${API_BASE_URL}/student/${encodeURIComponent(oldCourse)}/${oldRoll}`;
+                method = "PUT";
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(studentData)
+                });
+
+                if (response.ok) {
+                    showToast(isEdit ? "Student details updated." : "New student added.", "success");
+                    toggleModal("student-modal", false);
+                    fetchStudents();
+                } else {
+                    const err = await response.json();
+                    showToast(err.detail || "Unable to save student.", "error");
+                }
+            } catch (error) {
+                console.error("Submit Student Error:", error);
+                showToast("Connection to backend lost.", "error");
+            }
+        }
+
+        async function deleteStudent(course, rollNo) {
+            if (!confirm(`Confirm deletion of roll number ${rollNo} from ${course}?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/student/${encodeURIComponent(course)}/${rollNo}`, {
                     method: "DELETE"
                 });
 
                 if (response.ok) {
-                    fetchStudents(); // Refresh the table after deletion
+                    showToast("Student profile deleted.", "success");
+                    fetchStudents();
                 } else {
-                    const errData = await response.json();
-                    alert(`Failed to delete: ${errData.detail}`);
+                    const err = await response.json();
+                    showToast(err.detail || "Unable to delete student.", "error");
                 }
             } catch (error) {
-                console.error("Error deleting student:", error);
+                console.error("Delete Student Error:", error);
+                showToast("Connection error.", "error");
             }
         }
 
-        // Load students automatically when the page opens
-        window.onload = fetchStudents;
+        // Department Modals
+        function openAddDeptModal() {
+            document.getElementById("dept-modal-title").innerText = "Add New Department";
+            document.getElementById("dept-edit-mode").value = "false";
+            document.getElementById("dept-form").reset();
+            toggleModal("dept-modal", true);
+        }
+
+        function openEditDeptModal(name, code) {
+            document.getElementById("dept-modal-title").innerText = "Edit Department Details";
+            document.getElementById("dept-edit-mode").value = "true";
+            document.getElementById("dept-old-name").value = name;
+            document.getElementById("dept-old-code").value = code;
+
+            document.getElementById("dept-name").value = name;
+            document.getElementById("dept-code").value = code;
+
+            toggleModal("dept-modal", true);
+        }
+
+        async function submitDeptForm(event) {
+            event.preventDefault();
+            const isEdit = document.getElementById("dept-edit-mode").value === "true";
+            const oldName = document.getElementById("dept-old-name").value;
+            const oldCode = document.getElementById("dept-old-code").value;
+
+            const deptData = {
+                courseName: document.getElementById("dept-name").value,
+                courseCode: document.getElementById("dept-code").value
+            };
+
+            let url = `${API_BASE_URL}/departments`;
+            let method = "POST";
+
+            if (isEdit) {
+                url = `${API_BASE_URL}/department/${encodeURIComponent(oldName)}/${encodeURIComponent(oldCode)}`;
+                method = "PUT";
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(deptData)
+                });
+
+                if (response.ok) {
+                    showToast(isEdit ? "Department updated successfully." : "New department added.", "success");
+                    toggleModal("dept-modal", false);
+                    fetchDepartments();
+                } else {
+                    const err = await response.json();
+                    showToast(err.detail || "Unable to save department.", "error");
+                }
+            } catch (error) {
+                console.error("Submit Dept Error:", error);
+                showToast("Connection to backend lost.", "error");
+            }
+        }
+
+        async function deleteDept(courseName, courseCode) {
+            if (!confirm(`Are you sure you want to delete ${courseName} department?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/department/${encodeURIComponent(courseName)}/${encodeURIComponent(courseCode)}`, {
+                    method: "DELETE"
+                });
+
+                if (response.ok) {
+                    showToast("Department removed.", "success");
+                    fetchDepartments();
+                } else {
+                    const err = await response.json();
+                    showToast(err.detail || "Unable to delete department.", "error");
+                }
+            } catch (error) {
+                console.error("Delete Dept Error:", error);
+                showToast("Connection error.", "error");
+            }
+        }
+
+        // --- UTILITY TOASTS ---
+
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${message}</span>
+                <span style="cursor:pointer; font-weight:700;" onclick="this.parentElement.remove()">&times;</span>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+
+        // --- INITIALIZE APPLICATION STATE ---
+
+        function initApp() {
+            const token = localStorage.getItem("token");
+            const authSection = document.getElementById("auth-section");
+            const dashboardSection = document.getElementById("dashboard-section");
+
+            if (token) {
+                const user = parseJwt(token);
+                if (user) {
+                    // Check token expiration
+                    const now = Math.floor(Date.now() / 1000);
+                    if (user.exp && user.exp < now) {
+                        localStorage.removeItem("token");
+                        showToast("Session expired. Please login again.", "warning");
+                        initApp();
+                        return;
+                    }
+
+                    // User is authenticated, transition views
+                    authSection.classList.remove("active");
+                    dashboardSection.classList.add("active");
+
+                    // Set user identifier & badge
+                    document.getElementById("user-display-name").innerText = user.sub;
+                    const badge = document.getElementById("user-role-badge");
+                    badge.innerText = user.role;
+                    badge.className = "role-badge role-" + user.role;
+
+                    // Button visibility based on roles
+                    const studentBtn = document.getElementById("open-add-student-btn");
+                    const deptBtn = document.getElementById("open-add-dept-btn");
+
+                    if (user.role === "admin") {
+                        studentBtn.classList.remove("hidden");
+                        deptBtn.classList.remove("hidden");
+                    } else if (user.role === "faculty") {
+                        studentBtn.classList.remove("hidden");
+                        deptBtn.classList.add("hidden");
+                    } else {
+                        studentBtn.classList.add("hidden");
+                        deptBtn.classList.add("hidden");
+                    }
+
+                    // Load records
+                    fetchStudents();
+                    fetchDepartments();
+                    return;
+                }
+            }
+
+            // User is unauthenticated, show clean login form
+            authSection.classList.add("active");
+            dashboardSection.classList.remove("active");
+        }
+
+        // Start app
+        window.onload = initApp;
     </script>
 </body>
 </html>
