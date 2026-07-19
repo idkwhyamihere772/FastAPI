@@ -20,7 +20,15 @@ app.add_middleware(
     allow_headers = ["*"]
 )
 # hello  world
-
+Secret_key = os.getenv("Secret_key")
+Algorithm = "HS256"
+Access_token_expire_minutes = 60
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+def create_access_token(data: dict)->str:
+    to_encode=data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=Access_token_expire_minutes)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, Secret_key, algorithm=Algorithm)
 
 mongo_uri = os.getenv("mongo_uri")
 cli = MongoClient(mongo_uri)
@@ -136,3 +144,17 @@ def register_user(user: NewUser):
     return{
         "message" : f"User {user.username} added"
     }
+
+@app.post("/login")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user=user_collection.find_one({"username" : form_data.username})
+    if not user or not pwd_context.verify(form_data.password,user["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect Username Or Password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    access_token = create_access_token(
+        data = {"sub" : user["username"], "role" : user["role"]}
+    )
+    return {"access_token" : access_token, "token_type": "bearer"}
