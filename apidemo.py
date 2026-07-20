@@ -70,21 +70,21 @@ def get_student():
     student = list(student_collection.find({},{"_id" : 0}))
     return{"total students" : len(student),"Students" :student}
 
-@app.post("/student")
+@app.post("/student", dependencies=[Depends(oauth2_scheme)])
 def add_student(student: NewStudent):
     student_dict = student.model_dump()
     student_collection.insert_one(student_dict)
     return {"message" : "Student Added",
             "Added_Student" : student.name}
 
-@app.post("/departments")
+@app.post("/departments",dependencies=[Depends(oauth2_scheme)])
 def add_departments(department:newdepartment):
     department_dict=department.model_dump()
     department_collection.insert_one(department_dict)
     return {"message" : "department Added",
             "Added_department" : department.courseName}
 
-@app.put("/student/{course}/{roll_no}")
+@app.put("/student/{course}/{roll_no}", dependencies=[Depends(oauth2_scheme)])
 def update_student(course : str , roll_no : int ,student_update: NewStudent):
     update_data = student_update.model_dump()
     result = student_collection.update_one({"course" : course , "roll_no" : roll_no} , {"$set" : update_data})
@@ -96,7 +96,7 @@ def update_student(course : str , roll_no : int ,student_update: NewStudent):
         "message" : "Student updated",
         "Updated" : update_data
     }
-@app.put("/department/{courseName}/{courseCode}")
+@app.put("/department/{courseName}/{courseCode}",dependencies=[Depends(oauth2_scheme)])
 def update_department(courseName:str,courseCode:str,department_update:newdepartment):
     update_Data=department_update.model_dump()
     result=department_collection.update_one({"courseName":courseName,"courseCode":courseCode},{"$set":update_Data})
@@ -110,7 +110,7 @@ def update_department(courseName:str,courseCode:str,department_update:newdepartm
         "Updated" : update_Data
     }
 
-@app.delete("/department/{courseName}/{courseCode}")
+@app.delete("/department/{courseName}/{courseCode}",dependencies=[Depends(oauth2_scheme)])
 def delete_department(courseName : str , courseCode : str):
     result = department_collection.delete_one({"courseName" : courseName , "courseCode" : courseCode})
     if result.deleted_count == 0:
@@ -122,7 +122,7 @@ def delete_department(courseName : str , courseCode : str):
         "message" : "Department deleted"
         }
 
-@app.delete("/student/{course}/{roll_no}")
+@app.delete("/student/{course}/{roll_no}",dependencies=[Depends(oauth2_scheme)])
 def delete_student(course:str,roll_no:int):
     result=student_collection.delete_one({"course":course,"roll_no":roll_no})
     if result.deleted_count==0:
