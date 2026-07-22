@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Depends
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pydantic import BaseModel
 import os
 from fastapi.middleware.cors import CORSMiddleware
-
-
+from passlib.context import CryptContext
+from datetime import datetime, timedelta, timezone
+from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm
+import jwt
 # hello  world
 load_dotenv()
 app = FastAPI()
@@ -18,7 +20,15 @@ app.add_middleware(
     allow_headers = ["*"]
 )
 # hello  world
-
+Secret_key = os.getenv("Secret_key")
+Algorithm = "HS256"
+Access_token_expire_minutes = 60
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+def create_access_token(data: dict)->str:
+    to_encode=data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=Access_token_expire_minutes)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, Secret_key, algorithm=Algorithm)
 
 mongo_uri = os.getenv("mongo_uri")
 cli = MongoClient(mongo_uri)
@@ -26,14 +36,25 @@ cli = MongoClient(mongo_uri)
 db = cli.college
 department_collection = db.Department
 student_collection = db.Student
+user_collection = db.User
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated = "auto")
 class NewStudent(BaseModel):
     name : str
     roll_no : int
     course : str
+
 class newdepartment(BaseModel):
     courseName:str
     courseCode:str
+
+class NewUser(BaseModel):
+    username: str
+    password : str
+    role : str
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
 
 @app.get("/")
 def root():
@@ -49,21 +70,21 @@ def get_student():
     student = list(student_collection.find({},{"_id" : 0}))
     return{"total students" : len(student),"Students" :student}
 
-@app.post("/student")
+@app.post("/student", dependencies=[Depends(oauth2_scheme)])
 def add_student(student: NewStudent):
     student_dict = student.model_dump()
     student_collection.insert_one(student_dict)
     return {"message" : "Student Added",
             "Added_Student" : student.name}
 
-@app.post("/departments")
+@app.post("/departments",dependencies=[Depends(oauth2_scheme)])
 def add_departments(department:newdepartment):
     department_dict=department.model_dump()
     department_collection.insert_one(department_dict)
     return {"message" : "department Added",
             "Added_department" : department.courseName}
 
-@app.put("/student/{course}/{roll_no}")
+@app.put("/student/{course}/{roll_no}", dependencies=[Depends(oauth2_scheme)])
 def update_student(course : str , roll_no : int ,student_update: NewStudent):
     update_data = student_update.model_dump()
     result = student_collection.update_one({"course" : course , "roll_no" : roll_no} , {"$set" : update_data})
@@ -75,7 +96,7 @@ def update_student(course : str , roll_no : int ,student_update: NewStudent):
         "message" : "Student updated",
         "Updated" : update_data
     }
-@app.put("/department/{courseName}/{courseCode}")
+@app.put("/department/{courseName}/{courseCode}",dependencies=[Depends(oauth2_scheme)])
 def update_department(courseName:str,courseCode:str,department_update:newdepartment):
     update_Data=department_update.model_dump()
     result=department_collection.update_one({"courseName":courseName,"courseCode":courseCode},{"$set":update_Data})
@@ -89,7 +110,7 @@ def update_department(courseName:str,courseCode:str,department_update:newdepartm
         "Updated" : update_Data
     }
 
-@app.delete("/department/{courseName}/{courseCode}")
+@app.delete("/department/{courseName}/{courseCode}",dependencies=[Depends(oauth2_scheme)])
 def delete_department(courseName : str , courseCode : str):
     result = department_collection.delete_one({"courseName" : courseName , "courseCode" : courseCode})
     if result.deleted_count == 0:
@@ -101,7 +122,7 @@ def delete_department(courseName : str , courseCode : str):
         "message" : "Department deleted"
         }
 
-@app.delete("/student/{course}/{roll_no}")
+@app.delete("/student/{course}/{roll_no}",dependencies=[Depends(oauth2_scheme)])
 def delete_student(course:str,roll_no:int):
     result=student_collection.delete_one({"course":course,"roll_no":roll_no})
     if result.deleted_count==0:
@@ -110,6 +131,19 @@ def delete_student(course:str,roll_no:int):
     return{"status":"deleted",
            "message":"student deleted"}
 
+@app.post("/register",status_code=status.HTTP_201_CREATED)
+def register_user(user: NewUser):
+    if user.role not in ["admin","student","faculty"]:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            details="Cant register")
+    user_dict = {"username" : user.username , 
+                 "password" : hash_password(user.password) ,
+                 "role" : user.role}
+    
+    user_collection.insert_one(user_dict)
+    return{
+        "message" : f"User {user.username} added"
+    }
 
 
 
