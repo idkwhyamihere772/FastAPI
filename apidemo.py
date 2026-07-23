@@ -145,16 +145,8 @@ def register_user(user: NewUser):
         "message" : f"User {user.username} added"
     }
 
-@app.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user=user_collection.find_one({"username" : form_data.username})
-    if not user or not pwd_context.verify(form_data.password,user["password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect Username Or Password",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-    access_token = create_access_token(
-        data = {"sub" : user["username"], "role" : user["role"]}
-    )
-    return {"access_token" : access_token, "token_type": "bearer"}
+
+
+                            
+                             
+    
